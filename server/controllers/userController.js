@@ -36,7 +36,7 @@ export const getPublishedCreations = async (req, res) =>{
 
 // Like Creation
 
-export const toggleLikeCreations = async (req, res) =>{
+export const toggleLikeCreation = async (req, res) =>{
     try{
 
         const {userId} = req.auth()
