@@ -4,12 +4,39 @@ import { clerkClient } from "@clerk/express";
 import axios from "axios";
 import connectCloudinary from "../config/cloudinary.js";
 import { v2 as cloudinary } from 'cloudinary'
-
-
 import fs from "fs";
+import pkg from "../utils/pdfParse.cjs";
+
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const pdf = require("pdf-parse");
+
+// 🧠 Load pdf-parse through require to bypass ESM export issues
+const pdfModule = require("pdf-parse");
+
+// Force-detect the real function
+const pdf = typeof pdfModule === "function"
+    ? pdfModule
+    : (pdfModule.default || pdfModule["module.exports"]);
+
+console.log("✅ pdf-parse resolved type:", typeof pdf);
+
+
+// import { createRequire } from "module";
+// const require = createRequire(import.meta.url);
+// const pdf = require("pdf-parse");
+// export default defineComponent({
+//     async run({ steps, $ }) {
+//         const filePath = "/tmp/" + steps.download_file.$return_value.name;
+//         const pdfData = await readFile(filePath);
+//         const parsedData = await pdfParse(pdfData);
+//         console.log("Parsed PDF data:", parsedData);
+//     },
+// });
+
+
+
+
+
 
 
 const AI = new OpenAI({
@@ -23,6 +50,7 @@ const AI = new OpenAI({
 
 export const generateArticle = async (req, res) => {
     try {
+
         const { userId } = req.auth();
         const { prompt, length } = req.body;
         const plan = req.plan;
@@ -61,6 +89,9 @@ export const generateArticle = async (req, res) => {
     } catch (error) {
         console.log(error.message)
         res.json({ success: false, message: error.message })
+
+        console.error("PDF Parsing Error:", error);
+        res.status(500).json({ message: "Failed to parse PDF." });
     }
 }
 
@@ -162,7 +193,6 @@ export const generateImage = async (req, res) => {
 
 
 // Remove Image API
-
 export const removeImageBackground = async (req, res) => {
     try {
         const { userId } = req.auth();
@@ -236,29 +266,48 @@ export const removeImageObject = async (req, res) => {
 
 
 
-
 // Review Resume API
 export const resumeReview = async (req, res) => {
-
-
     try {
+        console.log("🟢 resumeReview called");
+        console.log("req.file:", req.file);
+        console.log("req.plan:", req.plan);
+
         const { userId } = req.auth();
         const resume = req.file;
         const plan = req.plan;
-
 
         if (plan !== 'premium') {
             return res.json({ success: false, message: "This feature is available for premium subscriptions." })
         }
 
-        if (resume.size > 5 * 1024 * 1024) {
-            return response.json({ success: false, message: "Resume file size exceeds allowed size (5MB)." })
+        if(resume.size > 5 * 1024 * 1024){
+            return res.json({success:false, message: "Resume file size exceeds allowed size is 5MB"})
         }
 
-        const dataBuffer = fs.readFileSync(resume.path)
-        const pdfData = await pdf(dataBuffer)
+        if (!resume) {
+            console.log("❌ No file received");
+            return res.status(400).json({ success: false, message: "No resume file uploaded" });
+        }
 
-        const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvement. Resume Content:\n\n${pdfData.text}`
+        const dataBuffer = fs.readFileSync(resume.path);
+        console.log("✅ File read successfully");
+
+        ///////////////////////////////////////////////////////////////////////////////new code
+        const pdfData = await pdf(dataBuffer);
+        console.log("✅ PDF parsed successfully. Length:", pdfData.text.length);
+
+
+        if (typeof pdf !== "function") {
+            throw new Error("pdf-parse function not loaded correctly");
+        }
+        ////////////////////////////////////////////////////
+
+
+        // fs.unlinkSync(req.file.path);
+        // console.log("🧹 Temp file deleted");
+
+        const prompt = `Review the following resume and provide constructive feedback on its strengths, weakness, and areas for improvement. Resume Content: \n\n${pdfData.text}`
 
         const response = await AI.chat.completions.create({
             model: "gemini-2.0-flash",
@@ -269,17 +318,23 @@ export const resumeReview = async (req, res) => {
                 },
             ],
             temperature: 0.7,
-            max_tokens: length,
+            max_tokens: 1000,
         });
 
         const content = response.choices[0].message.content
+        await sql` INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId},'Review the uploaded resume', ${content}, 'resume-review')`;
 
-        await sql` INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, 'Review the uploaded resume', ${content}, 'resume-review')`;
 
-        res.json({ success: true, content: content })
+        res.json({
+            success: true,
+            content,
+            message: "PDF parsed successfully",
+            text: pdfData.text.slice(0, 500)
+        });
 
     } catch (error) {
-        console.log(error.message)
-        res.json({ success: false, message: error.message })
+        console.error("🔥 Error in resumeReview:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
-}
+
+};
