@@ -5,14 +5,18 @@ import { clerkMiddleware, requireAuth } from '@clerk/express'
 import aiRouter from './routes/aiRoutes.js';
 import connectCloudinary  from './config/cloudinary.js';
 import userRouter from './routes/userRoutes.js';
+import multer from 'multer';
 
+const upload = multer({});
 
 const app = express()
 
 await connectCloudinary()
 
-app.use(cors())
-app.use(express.json())
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+// app.post('/upload', upload.any(), handleUpload);
 app.use(clerkMiddleware())
  
 
