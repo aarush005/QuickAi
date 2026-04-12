@@ -6,6 +6,14 @@ import connectCloudinary from "../config/cloudinary.js";
 import { v2 as cloudinary } from 'cloudinary'
 import fs from "fs";
 import pkg from "../utils/pdfParse.cjs";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+
+const AI = new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1",
+});
+
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
@@ -13,10 +21,12 @@ const require = createRequire(import.meta.url);
 // 🧠 Load pdf-parse through require to bypass ESM export issues
 const pdfModule = require("pdf-parse");
 
+
 // Force-detect the real function
 const pdf = typeof pdfModule === "function"
     ? pdfModule
     : (pdfModule.default || pdfModule["module.exports"]);
+
 
 console.log("✅ pdf-parse resolved type:", typeof pdf);
 
@@ -37,12 +47,18 @@ console.log("✅ pdf-parse resolved type:", typeof pdf);
 
 
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-
-const AI = new OpenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
+const geminiModel = genAI.getGenerativeModel({
+    model: "openai/gpt-4o-mini",
+    generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1024,
+    },
 });
+
+
+
 
 
 
@@ -50,50 +66,60 @@ const AI = new OpenAI({
 
 export const generateArticle = async (req, res) => {
     try {
-
         const { userId } = req.auth();
         const { prompt, length } = req.body;
         const plan = req.plan;
         const free_usage = req.free_usage;
 
         if (plan !== 'premium' && free_usage >= 10) {
-            return res.json({ success: false, message: "Limit reached. Upgrade to continue." })
+            return res.json({
+                success: false,
+                message: "Limit reached. Upgrade to continue."
+            });
         }
 
-        const response = await AI.chat.completions.create({
-            model: "gemini-2.0-flash",
-            messages: [
-                {
-                    role: "user",
-                    content: prompt,
-                },
-            ],
-            temperature: 0.7,
-            max_tokens: length,
-        });
+        // const response = await AI.chat.completions.create({
+        //     model: "gemini-2.0-flash",
+        //     messages: [{ role: "user", content: prompt }],
+        //     temperature: 0.7,
+        //     max_tokens: length,
+        // });
 
-        const content = response.choices[0].message.content
+        const result = await geminiModel.generateContent(prompt);
+        // const content =
+        //     response?.choices?.[0]?.message?.content || "";
 
-        await sql` INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId}, ${prompt}, ${content}, 'article')`;
+        const content = result.response.text();
+
+
+        await sql`
+            INSERT INTO creations (user_id, prompt, content, type)
+            VALUES (${userId}, ${prompt}, ${content}, 'article')
+        `;
 
         if (plan !== 'premium') {
             await clerkClient.users.updateUser(userId, {
                 privateMetadata: {
-                    free_usage: free_usage + 1
-                }
-            })
+                    free_usage: free_usage + 1,
+                },
+            });
         }
 
-        res.json({ success: true, content })
+        return res.json({ success: true, content });
 
     } catch (error) {
-        console.log(error.message)
-        res.json({ success: false, message: error.message })
-
-        console.error("PDF Parsing Error:", error);
-        res.status(500).json({ message: "Failed to parse PDF." });
+        console.error("Generate Article Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "AI generation failed",
+        });
     }
-}
+};
+
+
+
+
+
 
 
 
@@ -268,73 +294,192 @@ export const removeImageObject = async (req, res) => {
 
 // Review Resume API
 export const resumeReview = async (req, res) => {
-    try {
-        console.log("🟢 resumeReview called");
-        console.log("req.file:", req.file);
-        console.log("req.plan:", req.plan);
+  try {
+    console.log("🟢 resumeReview called");
 
-        const { userId } = req.auth();
-        const resume = req.file;
-        const plan = req.plan;
+    const { userId } = req.auth();
+    const resume = req.file;
+    const plan = req.plan;
 
-        if (plan !== 'premium') {
-            return res.json({ success: false, message: "This feature is available for premium subscriptions." })
-        }
-
-        if(resume.size > 5 * 1024 * 1024){
-            return res.json({success:false, message: "Resume file size exceeds allowed size is 5MB"})
-        }
-
-        if (!resume) {
-            console.log("❌ No file received");
-            return res.status(400).json({ success: false, message: "No resume file uploaded" });
-        }
-
-        const dataBuffer = fs.readFileSync(resume.path);
-        console.log("✅ File read successfully");
-
-        ///////////////////////////////////////////////////////////////////////////////new code
-        const pdfData = await pdf(dataBuffer);
-        console.log("✅ PDF parsed successfully. Length:", pdfData.text.length);
-
-
-        if (typeof pdf !== "function") {
-            throw new Error("pdf-parse function not loaded correctly");
-        }
-        ////////////////////////////////////////////////////
-
-
-        // fs.unlinkSync(req.file.path);
-        // console.log("🧹 Temp file deleted");
-
-        const prompt = `Review the following resume and provide constructive feedback on its strengths, weakness, and areas for improvement. Resume Content: \n\n${pdfData.text}`
-
-        const response = await AI.chat.completions.create({
-            model: "gemini-2.0-flash",
-            messages: [
-                {
-                    role: "user",
-                    content: prompt,
-                },
-            ],
-            temperature: 0.7,
-            max_tokens: 1000,
-        });
-
-        const content = response.choices[0].message.content
-        await sql` INSERT INTO creations (user_id, prompt, content, type) VALUES (${userId},'Review the uploaded resume', ${content}, 'resume-review')`;
-
-
-        res.json({
-            success: true,
-            content,
-            message: "PDF parsed successfully",
-            text: pdfData.text.slice(0, 500)
-        });
-
-    } catch (error) {
-        console.error("🔥 Error in resumeReview:", error);
-        res.status(500).json({ success: false, message: error.message });
+    if (!resume) {
+      return res.status(400).json({
+        success: false,
+        message: "No resume file uploaded",
+      });
     }
 
+    if (plan !== "premium") {
+      return res.json({
+        success: false,
+        message: "This feature is available for premium subscriptions.",
+      });
+    }
+
+    if (resume.size > 5 * 1024 * 1024) {
+      return res.json({
+        success: false,
+        message: "Resume file exceeds 5MB",
+      });
+    }
+
+    const dataBuffer = fs.readFileSync(resume.path);
+
+    if (typeof pdf !== "function") {
+      throw new Error("pdf-parse not loaded properly");
+    }
+
+    const pdfData = await pdf(dataBuffer);
+
+    const cleanedText = pdfData.text
+      .replace(/\n+/g, "\n") 
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // =========================
+    // 🧠 STEP 1: ANALYSIS
+    // =========================
+
+    const analysisPrompt = `
+You are an ATS resume analyzer.
+
+TASK:
+- Give ATS score (0–100)
+
+ATS RULES:
+- Start from 100
+- Deduct points:
+  - missing sections (-10 each)
+  - weak bullet points (-5 each)
+  - missing keywords (-15)
+  - no measurable achievements (-10)
+
+- Provide improvement points
+- FIRST point must include missing sections
+
+Return JSON:
+{
+  "analysis": {
+    "score": 0,
+    "points": []
+  }
+}
+
+Resume:
+${cleanedText}
+`;
+
+    const analysisResult = await AI.chat.completions.create({
+      model: "openai/gpt-4o-mini",
+      messages: [{ role: "user", content: analysisPrompt }],
+      temperature: 0.7,
+      max_tokens: 1500,
+    });
+
+    let analysisText = analysisResult.choices[0].message.content;
+
+    // 🔥 CLEAN JSON
+    analysisText = analysisText
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const analysisStart = analysisText.indexOf("{");
+    const analysisEnd = analysisText.lastIndexOf("}");
+
+    const analysisJSON = JSON.parse(
+      analysisText.substring(analysisStart, analysisEnd + 1)
+    );
+
+    // =========================
+    // 🧠 STEP 2: IMPROVEMENT
+    // =========================
+
+    const improvePrompt = `
+You are an expert resume writer.
+
+IMPORTANT:
+You MUST apply ALL improvements below.
+
+IMPROVEMENTS:
+${analysisJSON.analysis.points.join("\n")}
+
+RULES:
+- Apply every improvement
+- Do NOT remove any existing section
+- Preserve section order
+- Improve bullet points with measurable results
+- Add missing sections if mentioned
+- Do NOT invent fake experience
+
+Return JSON:
+{
+  "name": "",
+  "email": "",
+  "phone": "",
+  "sections": [
+    {
+      "title": "",
+      "content": []
+    }
+  ]
+}
+
+Original Resume:
+${cleanedText}
+`;
+
+    const improvedResult = await AI.chat.completions.create({
+      model: "openai/gpt-4o-mini",
+      messages: [{ role: "user", content: improvePrompt }],
+      temperature: 0.7,
+      max_tokens: 3000,
+    });
+
+    let improvedText = improvedResult.choices[0].message.content;
+
+    // 🔥 CLEAN JSON
+    improvedText = improvedText
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const impStart = improvedText.indexOf("{");
+    const impEnd = improvedText.lastIndexOf("}");
+
+    const improvedJSON = JSON.parse(
+      improvedText.substring(impStart, impEnd + 1)
+    );
+
+    // =========================
+    // 💾 SAVE TO DB
+    // =========================
+
+    await sql`
+      INSERT INTO creations (user_id, prompt, content, type)
+      VALUES (${userId}, 'Resume Review + Improvement', ${JSON.stringify({
+        analysis: analysisJSON.analysis,
+        resume: improvedJSON,
+      })}, 'resume')
+    `;
+
+    // =========================
+    // 📤 RESPONSE
+    // =========================
+
+    res.json({
+      success: true,
+      content: {
+        analysis: analysisJSON.analysis,
+        resume: improvedJSON,
+      },
+    });
+
+  } catch (error) {
+    console.error("🔥 resumeReview error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
 };

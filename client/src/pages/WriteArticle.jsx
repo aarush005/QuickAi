@@ -26,10 +26,19 @@ const WriteArticle = () => {
   
   const onSubmitHandler = async (e) =>{
     e.preventDefault();
+  console.log("Submit clicked");
 
     try {
       setLoading(true)
+
+       console.log("Getting token...");
+    const token = await getToken();
+    console.log("Token received:", token);
+
       const prompt = `Write an article about ${input} in ${selectedLength.text}`
+
+          console.log("Sending request...");
+
 
       const {data} = await axios.post('/api/ai/generate-article', {prompt, length:selectedLength.length}, {
         headers: {Authorization: `Bearer ${await getToken()}`}
@@ -41,11 +50,16 @@ const WriteArticle = () => {
         toast.error(data.message)
         setLoading(false)
       }
+          console.log("Response:", data);
+
     } catch (error) {
+          console.log("Axios error:", error);
       toast.error(error.message)
       setLoading(false)
     }
   }
+
+ 
 
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700">
@@ -68,13 +82,16 @@ const WriteArticle = () => {
       ))}
        </div>
        <br/>
-       <button disabled={loading} className='w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#226BFF] to-[#65ADFF] text-white px-4 py-2 mt-6 text-sm rounded-lg cursor-pointer'> 
+       <button 
+       type="submit"
+       disabled={loading} 
+       className='w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#226BFF] to-[#65ADFF] text-white px-4 py-2 mt-6 text-sm rounded-lg cursor-pointer'> 
         {
           loading ? <span className='w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin'></span>
           :  <Edit className='w-5'/>
         }
         Generate Article
-       </button>
+       </button>  
       </form>
 
       {/* Right col */}
