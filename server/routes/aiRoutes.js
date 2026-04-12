@@ -1,6 +1,6 @@
 import express from "express";
 import { auth } from "../middleware/auth.js";
-import { deleteCreation, generateArticle, generateBlogTitle, generateImage, removeImageBackground, removeImageObject, resumeReview } from "../controllers/aiController.js";
+import { deleteCreation, generateArticle, generateBlogTitle, generateImage, removeImageBackground, removeImageObject, resumeReview, toggleLike } from "../controllers/aiController.js";
 import { upload } from "../config/multer.js";
 import { getUserCreations } from "../controllers/userController.js";
 
@@ -25,6 +25,7 @@ aiRouter.get('/get-user-creations', auth, getUserCreations)
 
 aiRouter.post('/delete-creation', auth, deleteCreation);
 
+aiRouter.post("/toggle-like", auth, toggleLike);
 
 
 

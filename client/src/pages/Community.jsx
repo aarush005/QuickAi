@@ -29,26 +29,25 @@ const Community = () => {
     setLoading(false);
   };
 
-  const imageLikeToggle = async (id) => {
-    try {
-      const { data } = await axios.post(
-        "/api/user/get-published-creations",
-        { id },
-        {
-          headers: { Authorization: `Bearer ${await getToken()}` },
-        },
-      );
-
-      if (data.success) {
-        toast.success(data.message);
-        await fetchCreations();
-      } else {
-        toast.error(data.message);
+const imageLikeToggle = async (id) => {
+  try {
+    const { data } = await axios.post(
+      "/api/ai/toggle-like",
+      { id },
+      {
+        headers: { Authorization: `Bearer ${await getToken()}` },
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+    );
+
+    if (data.success) {
+      await fetchCreations(); // refresh UI
+    } else {
+      toast.error(data.message);
     }
-  };
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Like failed");
+  }
+};
 
   const deleteCreationHandler = async (id) => {
     try {

@@ -536,3 +536,58 @@ export const deleteCreation = async (req, res) => {
     });
   }
 };
+
+
+
+export const toggleLike = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { id } = req.body;
+
+    const creation = await sql`
+      SELECT * FROM creations WHERE id = ${id}
+    `;
+
+    if (!creation.length) {
+      return res.json({
+        success: false,
+        message: "Creation not found",
+      });
+    }
+
+    // ✅ get existing likes
+    let likes = creation[0].likes || [];
+
+    // ✅ normalize
+    likes = likes.map(String);
+
+    // ✅ toggle
+    if (likes.includes(String(userId))) {
+      likes = likes.filter((uid) => uid !== String(userId));
+    } else {
+      likes.push(String(userId));
+    }
+
+    // ✅ convert to postgres array format
+    const pgArray = `{${likes.join(",")}}`;
+
+    // ✅ update
+    await sql`
+      UPDATE creations 
+      SET likes = ${pgArray} 
+      WHERE id = ${id}
+    `;
+
+    res.json({
+      success: true,
+      message: "Like updated",
+    });
+
+  } catch (error) {
+    console.error("🔥 LIKE ERROR:", error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
