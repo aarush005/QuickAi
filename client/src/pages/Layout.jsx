@@ -8,38 +8,56 @@ import Sidebar from "../components/Sidebar";
 const Layout = () => {
   const navigate = useNavigate();
   const [sidebar, setSidebar] = useState(false);
-  const {user} = useUser()
+  const { user } = useUser();
 
   return user ? (
-    <div className="flex flex-col items-start justify-start h-screen">
-      <nav className="w-full px-8 min-h-14 flex items-center justify-between border-b border-gray-200">
-        <img className="cursor-pointer" src={assets.logo} alt="" onClick={() => navigate("/")} />
+    <div className="flex flex-col h-screen">
+      {/* NAVBAR */}
+      <nav className="w-full px-4 sm:px-8 min-h-14 flex items-center justify-between border-b border-gray-200 bg-white">
+        <img
+          className="cursor-pointer h-6"
+          src={assets.logo}
+          alt="logo"
+          onClick={() => navigate("/")}
+        />
+
+        {/* TOGGLE BUTTON */}
         {sidebar ? (
           <X
             onClick={() => setSidebar(false)}
-            className="w-6 h-6 text-gray-600 sm:hidden"
+            className="w-6 h-6 text-gray-600 sm:hidden cursor-pointer"
           />
         ) : (
           <Menu
-            onClick={() => setSidebar(false)}
-            className="w-6 h-6 text-gray-600 sm:hidden"
+            onClick={() => setSidebar(true)}
+            className="w-6 h-6 text-gray-600 sm:hidden cursor-pointer"
           />
         )}
       </nav>
-      {/* Sidebar */}
 
-      <div className="flex-1 w-full flex h-[calc(100vh-64px)]">
+      {/* BACKDROP (MOBILE ONLY) */}
+      {sidebar && (
+        <div
+          onClick={() => setSidebar(false)}
+          className="fixed inset-0 bg-black/30 z-40 sm:hidden"
+        />
+      )}
+
+      {/* MAIN LAYOUT */}
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar sidebar={sidebar} setSidebar={setSidebar} />
-        <div className="flex-1 bg-[#F4F7FB]">
+
+        {/* CONTENT */}
+        <div className="flex-1 bg-[#F4F7FB] overflow-y-auto">
           <Outlet />
         </div>
       </div>
     </div>
   ) : (
     <div className="flex items-center justify-center h-screen">
-      <SignIn/>
+      <SignIn />
     </div>
-  )
+  );
 };
 
 export default Layout;
