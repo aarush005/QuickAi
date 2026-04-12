@@ -483,3 +483,56 @@ ${cleanedText}
     });
   }
 };
+
+
+// Delete a Creation 
+
+export const deleteCreation = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { id } = req.body;
+
+    if (!id) {
+      return res.json({
+        success: false,
+        message: "Creation ID is required",
+      });
+    }
+
+    // 🔒 Only allow owner to delete
+    const creation = await sql`
+      SELECT * FROM creations WHERE id = ${id}
+    `;
+
+    if (!creation.length) {
+      return res.json({
+        success: false,
+        message: "Creation not found",
+      });
+    }
+
+    if (creation[0].user_id !== userId) {
+      return res.json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // ✅ Delete
+    await sql`
+      DELETE FROM creations WHERE id = ${id}
+    `;
+
+    res.json({
+      success: true,
+      message: "Creation deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("Delete creation error:", error);
+    res.json({
+      success: false,
+      message: "Failed to delete creation",
+    });
+  }
+};

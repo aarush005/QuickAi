@@ -4,6 +4,8 @@ import { Gem, Sparkles } from 'lucide-react'
 import { Protect } from '@clerk/clerk-react'
 import CreationsItems from '../components/CreationsItems'
 import axios from 'axios'
+import { useAuth } from "@clerk/clerk-react";
+import toast from 'react-hot-toast'
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -14,7 +16,7 @@ const Dashboard = () => {
 
   const getDashboardData = async () =>{
     try {
-      const {data} = await axios.get('/api/user/get-user-creations', {
+      const {data} = await axios.get('/api/ai/get-user-creations' , {
         headers : {Authorization: `Bearer ${await getToken()}`}
       })
           console.log("📦 API Response:", data);
