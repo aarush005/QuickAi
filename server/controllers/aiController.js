@@ -50,7 +50,7 @@ console.log("✅ pdf-parse resolved type:", typeof pdf);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const geminiModel = genAI.getGenerativeModel({
-    model: "openai/gpt-4o-mini",
+    model: "gpt-5",
     generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 1024,
@@ -78,18 +78,18 @@ export const generateArticle = async (req, res) => {
             });
         }
 
-        // const response = await AI.chat.completions.create({
-        //     model: "gemini-2.0-flash",
-        //     messages: [{ role: "user", content: prompt }],
-        //     temperature: 0.7,
-        //     max_tokens: length,
-        // });
+        const response = await AI.chat.completions.create({
+              model: "openai/gpt-4o-mini",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+            max_tokens: length,
+        });
 
-        const result = await geminiModel.generateContent(prompt);
-        // const content =
-        //     response?.choices?.[0]?.message?.content || "";
+        // const result = await geminiModel.generateContent(prompt);
+        const content =
+            response?.choices?.[0]?.message?.content || "";
 
-        const content = result.response.text();
+        // const content = result.response.text();
 
 
         await sql`
@@ -394,7 +394,7 @@ ${cleanedText}
     // 🧠 STEP 2: IMPROVEMENT
     // =========================
 
-    const improvePrompt = `
+const improvePrompt = `
 You are an expert resume writer.
 
 IMPORTANT:
@@ -466,6 +466,7 @@ ${cleanedText}
     // 📤 RESPONSE
     // =========================
 
+    
     res.json({
       success: true,
       content: {
