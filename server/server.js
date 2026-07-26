@@ -7,6 +7,12 @@ import connectCloudinary  from './config/cloudinary.js';
 import userRouter from './routes/userRoutes.js';
 import multer from 'multer';
 
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const upload = multer({});
 
 const app = express()
@@ -35,3 +41,9 @@ app.listen(PORT, ()=>{
     console.log('Server is running on port', PORT)
 })
 
+
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+app.get("/{*splat}", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
