@@ -1,6 +1,6 @@
 import { Scissors, Sparkles } from "lucide-react";
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../config/axios";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
 

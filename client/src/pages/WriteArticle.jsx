@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import {  Edit, EditIcon, Sparkles } from 'lucide-react'
-import axios from 'axios'
+import axios from "../config/axios";
 import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import Markdown from 'react-markdown';

@@ -3,7 +3,7 @@ import { dummyCreationData } from "../assets/assets";
 import { Gem, Sparkles } from "lucide-react";
 import { Protect } from "@clerk/clerk-react";
 import CreationsItems from "../components/CreationsItems";
-import axios from "axios";
+import axios from "../config/axios";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
 
