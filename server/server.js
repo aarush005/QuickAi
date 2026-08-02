@@ -21,17 +21,25 @@ await connectCloudinary()
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-// app.post('/upload', upload.any(), handleUpload);
-app.use(clerkMiddleware())
- 
 
-app.use(requireAuth())
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://oryin.netlify.app",
+    ],
+    credentials: true,
+  })
+);
 
-app.get('/', (req, res)=>res.send('Server is Live!'))
+app.use(clerkMiddleware());
 
-app.use('/api/ai', aiRouter)
-app.use('/api/user', userRouter)
+app.get("/", (req, res) => {
+  res.send("Server is Live!");
+});
+
+app.use("/api/ai", aiRouter);
+app.use("/api/user", userRouter);
 
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
@@ -39,8 +47,6 @@ app.use(express.static(path.join(__dirname, "../client/dist")));
 app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 
