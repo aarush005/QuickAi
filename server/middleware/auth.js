@@ -5,7 +5,6 @@ import { clerkClient } from "@clerk/express";
 export const auth = async (req, res, next)=>{
     try {
 
-            console.log("Auth object:", req.auth());
 
         const {userId, has} = await req.auth();
         const hasPremiumPlan = await has({plan: 'premium'})
@@ -15,7 +14,6 @@ export const auth = async (req, res, next)=>{
 
         const user  = await clerkClient.users.getUser(userId);
 
-            console.log("User ID:", userId);
 
 
         if(!hasPremiumPlan && user.privateMetadata.free_usage){

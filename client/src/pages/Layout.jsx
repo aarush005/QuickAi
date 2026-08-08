@@ -16,7 +16,7 @@ const Layout = () => {
       <nav className="w-full px-4 sm:px-8 min-h-14 flex items-center justify-between border-b border-gray-200 bg-white">
         <img
           className="cursor-pointer h-6"
-          src={assets.logo}
+          src={assets.oryin}
           alt="logo"
           onClick={() => navigate("/")}
         />

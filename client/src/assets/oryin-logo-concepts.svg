@@ -1,0 +1,65 @@
+<svg width="1040" height="760" viewBox="0 0 1040 760" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;display=swap');
+    text { font-family: 'Space Grotesk','Poppins','Segoe UI',sans-serif; }
+    .title { fill:#15121F; font-weight:700; font-size:24px; letter-spacing:-0.3px; }
+    .subtitle { fill:#8B85B8; font-weight:500; font-size:13px; letter-spacing:0.3px; }
+    .caption { fill:#8B85B8; font-weight:600; font-size:11px; letter-spacing:2px; text-transform:uppercase; }
+    .caption-light { fill:#7A73A8; font-weight:600; font-size:11px; letter-spacing:2px; text-transform:uppercase; }
+    .word-ink { fill:#15121F; font-weight:600; }
+    .word-white { fill:#FAF9FF; font-weight:600; }
+  </style>
+
+  <rect width="1040" height="760" fill="#EFEDF7"/>
+
+  <!-- Header -->
+  <text x="40" y="38" class="title">Oryin — logo concepts</text>
+  <text x="40" y="58" class="subtitle">Signature mark: an orbit ring broken by a point of origin</text>
+
+  <!-- ===== Tile 1: Primary lockup (light) ===== -->
+  <g>
+    <rect x="40" y="90" width="465" height="300" rx="16" fill="#FAF9FF" stroke="#E3E0F2" stroke-width="1"/>
+    <g transform="translate(80,150) scale(0.9)">
+      <path d="M 76 28.1 A 34 34 0 1 1 76 71.9" fill="none" stroke="#5B4FE9" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="58" cy="70" r="2.6" fill="#5B4FE9" opacity="0.5"/>
+      <path d="M 0 -15 Q 3 -3 7 0 Q 3 3 0 11 Q -3 3 -7 0 Q -3 -3 0 -15 Z" fill="#FF6B4A" transform="translate(82,50) rotate(12)"/>
+    </g>
+    <text x="238" y="248" class="word-ink" font-size="52" letter-spacing="-1">oryin</text>
+    <text x="80" y="358" class="caption">Primary lockup — light backgrounds</text>
+  </g>
+
+  <!-- ===== Tile 2: Reversed lockup (dark) ===== -->
+  <g>
+    <rect x="535" y="90" width="465" height="300" rx="16" fill="#15121F"/>
+    <g transform="translate(575,150) scale(0.9)">
+      <path d="M 76 28.1 A 34 34 0 1 1 76 71.9" fill="none" stroke="#B9AEFF" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="58" cy="70" r="2.6" fill="#B9AEFF" opacity="0.5"/>
+      <path d="M 0 -15 Q 3 -3 7 0 Q 3 3 0 11 Q -3 3 -7 0 Q -3 -3 0 -15 Z" fill="#FF6B4A" transform="translate(82,50) rotate(12)"/>
+    </g>
+    <text x="733" y="248" class="word-white" font-size="52" letter-spacing="-1">oryin</text>
+    <text x="575" y="358" class="caption-light">Reversed lockup — dark backgrounds</text>
+  </g>
+
+  <!-- ===== Tile 3: Icon mark alone ===== -->
+  <g>
+    <rect x="40" y="420" width="465" height="300" rx="16" fill="#FAF9FF" stroke="#E3E0F2" stroke-width="1"/>
+    <g transform="translate(190,470) scale(1.6)">
+      <path d="M 76 28.1 A 34 34 0 1 1 76 71.9" fill="none" stroke="#5B4FE9" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="58" cy="70" r="2.6" fill="#5B4FE9" opacity="0.5"/>
+      <path d="M 0 -15 Q 3 -3 7 0 Q 3 3 0 11 Q -3 3 -7 0 Q -3 -3 0 -15 Z" fill="#FF6B4A" transform="translate(82,50) rotate(12)"/>
+    </g>
+    <text x="80" y="688" class="caption">Icon mark — favicon, app icon, social avatar</text>
+  </g>
+
+  <!-- ===== Tile 4: Monochrome ===== -->
+  <g>
+    <rect x="535" y="420" width="465" height="300" rx="16" fill="#FAF9FF" stroke="#E3E0F2" stroke-width="1"/>
+    <g transform="translate(575,480) scale(0.9)">
+      <path d="M 76 28.1 A 34 34 0 1 1 76 71.9" fill="none" stroke="#15121F" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="58" cy="70" r="2.6" fill="#15121F" opacity="0.5"/>
+      <path d="M 0 -15 Q 3 -3 7 0 Q 3 3 0 11 Q -3 3 -7 0 Q -3 -3 0 -15 Z" fill="#15121F" transform="translate(82,50) rotate(12)"/>
+    </g>
+    <text x="733" y="578" class="word-ink" font-size="52" letter-spacing="-1">oryin</text>
+    <text x="575" y="688" class="caption">Monochrome — single-colour print, stamps, engraving</text>
+  </g>
+</svg>
