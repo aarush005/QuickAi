@@ -94,6 +94,9 @@ export const ReviewResume = () => {
       if (data.success) {
         setAnalysis(data.content.analysis);
         setResumeData(data.content.resume);
+
+          resultRef.current?.scrollIntoView({ behavior: "smooth" });
+
       } else {
         toast.error(data.message || "Failed to review resume");
       }
@@ -104,8 +107,10 @@ export const ReviewResume = () => {
           "Something went wrong. Please try again.",
       );
       console.error("Resume review error:", error);
+    } finally {
+setLoading(false);
     }
-    setLoading(false);
+    
   };
 
   return (
@@ -160,7 +165,7 @@ export const ReviewResume = () => {
             Upload your resume and click "Review Resume" to get ATS insights
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          <div  ref={resultRef} className="flex-1 overflow-y-auto space-y-4 pr-2">
             {/* ATS SCORE */}
             <div className="text-center">
               <p className="text-sm text-gray-500">ATS Score</p>
