@@ -28,7 +28,7 @@ const pdf = typeof pdfModule === "function"
     : (pdfModule.default || pdfModule["module.exports"]);
 
 
-console.log("✅ pdf-parse resolved type:", typeof pdf);
+// console.log("✅ pdf-parse resolved type:", typeof pdf);
 
 
 // import { createRequire } from "module";
@@ -108,7 +108,7 @@ export const generateArticle = async (req, res) => {
         return res.json({ success: true, content });
 
     } catch (error) {
-        console.error("Generate Article Error:", error);
+        // console.error("Generate Article Error:", error);
         res.status(500).json({
             success: false,
             message: "AI generation failed",
@@ -165,7 +165,7 @@ export const generateBlogTitle = async (req, res) => {
         res.json({ success: true, content })
 
     } catch (error) {
-        console.log(error.message)
+        // console.log(error.message)
         res.json({ success: false, message: error.message })
     }
 }
@@ -208,7 +208,7 @@ export const generateImage = async (req, res) => {
         res.json({ success: true, content: secure_url })
 
     } catch (error) {
-        console.log(error.message)
+        // console.log(error.message)
         let message = error.message;
         res.json({ success: false, message: error.message })
     }
@@ -221,7 +221,7 @@ export const generateImage = async (req, res) => {
 // Remove Image API
 export const removeImageBackground = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const { userId } = await req.auth();
         const image = req.file;
         const plan = req.plan;
 
@@ -245,7 +245,7 @@ export const removeImageBackground = async (req, res) => {
         res.json({ success: true, content: secure_url })
 
     } catch (error) {
-        console.log(error.message)
+        // console.log(error.message)
         res.json({ success: false, message: error.message })
     }
 }
@@ -284,7 +284,7 @@ export const removeImageObject = async (req, res) => {
         res.json({ success: true, content: imageUrl })
 
     } catch (error) {
-        console.log(error.message)
+        // console.log(error.message)
         res.json({ success: false, message: error.message })
     }
 }
@@ -295,7 +295,7 @@ export const removeImageObject = async (req, res) => {
 // Review Resume API
 export const resumeReview = async (req, res) => {
   try {
-    console.log("🟢 resumeReview called");
+    // console.log("🟢 resumeReview called");
 
     const { userId } = req.auth();
     const resume = req.file;
@@ -476,7 +476,7 @@ ${cleanedText}
     });
 
   } catch (error) {
-    console.error("🔥 resumeReview error:", error);
+    // console.error("🔥 resumeReview error:", error);
 
     res.status(500).json({
       success: false,
@@ -530,7 +530,7 @@ export const deleteCreation = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Delete creation error:", error);
+    // console.error("Delete creation error:", error);
     res.json({
       success: false,
       message: "Failed to delete creation",
@@ -585,7 +585,7 @@ export const toggleLike = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("🔥 LIKE ERROR:", error);
+    // console.error("🔥 LIKE ERROR:", error);
     res.json({
       success: false,
       message: error.message,
