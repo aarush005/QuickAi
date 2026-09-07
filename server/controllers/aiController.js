@@ -66,7 +66,7 @@ const geminiModel = genAI.getGenerativeModel({
 
 export const generateArticle = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const { userId } = await req.auth();
         const { prompt, length } = req.body;
         const plan = req.plan;
         const free_usage = req.free_usage;
@@ -128,7 +128,7 @@ export const generateArticle = async (req, res) => {
 
 export const generateBlogTitle = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const { userId } = await req.auth();
         const { prompt } = req.body;
         const plan = req.plan;
         const free_usage = req.free_usage;
@@ -177,7 +177,7 @@ export const generateBlogTitle = async (req, res) => {
 
 export const generateImage = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const { userId } = await req.auth();
         const { prompt, publish } = req.body;
         const plan = req.plan;
 
@@ -257,7 +257,7 @@ export const removeImageBackground = async (req, res) => {
 
 export const removeImageObject = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const { userId } = await req.auth();
         const { object } = req.body;
         const image = req.file;
         const plan = req.plan;
@@ -297,7 +297,7 @@ export const resumeReview = async (req, res) => {
   try {
     // console.log("🟢 resumeReview called");
 
-    const { userId } = req.auth();
+    const { userId } = await req.auth();
     const resume = req.file;
     const plan = req.plan;
 
@@ -490,7 +490,7 @@ ${cleanedText}
 
 export const deleteCreation = async (req, res) => {
   try {
-    const { userId } = req.auth();
+    const { userId } = await req.auth();
     const { id } = req.body;
 
     if (!id) {
@@ -542,7 +542,7 @@ export const deleteCreation = async (req, res) => {
 
 export const toggleLike = async (req, res) => {
   try {
-    const { userId } = req.auth();
+    const { userId } = await req.auth();
     const { id } = req.body;
 
     const creation = await sql`
