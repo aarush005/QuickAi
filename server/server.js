@@ -13,7 +13,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const upload = multer({});
 
 const app = express()
 
@@ -44,9 +43,18 @@ app.use("/api/user", userRouter);
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
+
 app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
+
+app.use((err, req, res, next) =>{
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ success:false, message:err.message});
+  }
+  console.log(err);
+  res.status(500).json({success:false, message: "Something went wrong"})
+})
 
 const PORT = process.env.PORT || 3000;
 
