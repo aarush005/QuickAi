@@ -1,22 +1,23 @@
 import multer from "multer";
+import { AppError } from "../utils/AppError.js";
 
+export const MAX_FILE_SIZE_MB = 5;
 
 const storage = multer.diskStorage({});
 
-const fileFilter = (req, file, cb) =>{
-    if (file.mimetype != "application/pdf") {
-        return cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", "Only PDF files are allowed"));
+// Used by the image routes (unchanged for now - we will harden it in a later lesson)
+export const upload = multer({ storage });
 
-    }
-    cb(null,true);
+// Used by the resume route: PDF only, 5MB max.
+const pdfOnly = (req, file, cb) => {
+  if (file.mimetype !== "application/pdf") {
+    return cb(new AppError("Only PDF files are allowed.", 400));
+  }
+  cb(null, true);
 };
 
-
-
-export const upload = multer({
-    storage,
-    fileFilter,
-    limits: {
-        fileSize: 5 * 1024 *1024
-    }, // 5MB
-})
+export const uploadPdf = multer({
+  storage,
+  fileFilter: pdfOnly,
+  limits: { fileSize: MAX_FILE_SIZE_MB * 1024 * 1024 },
+});
