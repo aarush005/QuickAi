@@ -1,11 +1,18 @@
 import sql from "../config/db.js"
-
+import prisma from "../config/prisma.js"
 
 export const getUserCreations = async (req, res) =>{
     try{
         const {userId} = await req.auth()
 
-      const creations =   await sql  `SELECT * FROM creations WHERE user_id = ${userId} ORDER BY created_at DESC`;
+      const creations =   await prisma.creation.findMany({
+        where: {userId},
+        orderBy: {createdAt: "desc"},
+      })
+
+      console.log("PRISMA RESULT:", creations)
+      
+    //   sql  `SELECT * FROM creations WHERE user_id = ${userId} ORDER BY created_at DESC`;
 
               res.json({ success: true, creations})
 
