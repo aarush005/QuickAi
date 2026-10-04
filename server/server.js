@@ -5,14 +5,13 @@ import { clerkMiddleware, requireAuth } from '@clerk/express'
 import aiRouter from './routes/aiRoutes.js';
 import connectCloudinary  from './config/cloudinary.js';
 import userRouter from './routes/userRoutes.js';
-import multer from 'multer';
+import { errorHandler } from './middleware/errorHandler.js';
 
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 
 const app = express()
 
@@ -43,22 +42,15 @@ app.use("/api/user", userRouter);
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-
 app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 
-app.use((err, req, res, next) =>{
-  if (err instanceof multer.MulterError) {
-    return res.status(400).json({ success:false, message:err.message});
-  }
-  console.log(err);
-  res.status(500).json({success:false, message: "Something went wrong"})
-})
+// Must come AFTER all routes
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, ()=>{
     console.log('Server is running on port', PORT)
 })
-
