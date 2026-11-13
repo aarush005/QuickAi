@@ -25,3 +25,4 @@ export const ImprovedResumeSchema = z.object({
     )
     .min(1)
 })
+

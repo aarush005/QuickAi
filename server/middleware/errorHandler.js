@@ -17,6 +17,7 @@ export const errorHandler = (err, req, res,next) =>{
     }
 
 
+
 // 2. Errors we throw on purppse - safe to show the message to the user
 
 if(err instanceof AppError) {
