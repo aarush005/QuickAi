@@ -1,7 +1,8 @@
 import express from "express";
 import { auth } from "../middleware/auth.js";
-import { deleteCreation, generateArticle, generateBlogTitle, generateImage, removeImageBackground, removeImageObject, resumeReview, toggleLike } from "../controllers/aiController.js";
-import { upload } from "../config/multer.js";
+import { deleteCreation, generateArticle, generateBlogTitle, generateImage, removeImageBackground, removeImageObject, toggleLike } from "../controllers/aiController.js";
+import { upload, uploadPdf } from "../config/multer.js";
+import { resumeReview } from "../controllers/resumeController.js";
 import { getUserCreations } from "../controllers/userController.js";
 
 
@@ -19,7 +20,7 @@ aiRouter.post('/remove-image-background', upload.single('image'), auth, removeIm
 
 aiRouter.post('/remove-image-object', upload.single('image'), auth, removeImageObject)
 
-aiRouter.post('/resume-review', auth, upload.single('resume'), resumeReview);
+aiRouter.post('/resume-review', auth, uploadPdf.single('resume'), resumeReview);
 
 aiRouter.get('/get-user-creations', auth, getUserCreations)
 
