@@ -59,6 +59,10 @@ RULES:
 - Improve bullet points with measurable results
 - Add missing sections if mentioned
 - Do NOT invent fake experience
+- Every item in each section's "content" array MUST be a plain text string
+- NEVER use objects or nested arrays inside "content"
+- For jobs and projects: write ONE string like "Role — Company (dates)", then write each bullet point as its own separate string
+
 
 Return JSON:
 {
@@ -83,9 +87,9 @@ ${resumeText}
 const askAI = async (prompt, maxTokens) => {
     const result = await AI.chat.completions.create({
         model: MODEL,
-        message: [{role: "user", content: prompt}],
+        messages: [{role: "user", content: prompt}],
         temperature: 0.3,
-        max_token: maxTokens,
+        max_tokens: maxTokens,
         response_format: {type: "json_object"},  // ask the AI for valid JSON
     });
     return result.choices[0].message.content;
@@ -109,9 +113,9 @@ export const review = async ({ file, userId, plan }) => {
     );
 
     const resume = await runWithRetry(
-        () => askAI(buildAnalysisPrompt(resumeText,analysis.points), 3000),
-        ImprovedResumeSchema
-    )
+      () => askAI(buildImprovePrompt(resumeText, analysis.points), 3000),
+      ImprovedResumeSchema
+    );
 
     await saveCreation({
         userId,
