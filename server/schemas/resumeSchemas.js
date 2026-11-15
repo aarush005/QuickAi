@@ -1,13 +1,25 @@
 import { z } from "zod";
 
-// The shape we EXPECT back from the AI for step 1 (analysis)
-export const AnalysisSchema = z.object({
-  analysis: z.object({
-    score: z.number().min(0).max(100),
-    points: z.array(z.string()).min(1),
-  }),
-});
+// Sometimes the AI sends a suggestion as an object, e.g.
+//   { section: "Projects", suggestion: "Add measurable results" }
+// instead of one plain sentence. We turn each object into ONE sentence:
+//   "Projects — Add measurable results"
+const toSentence = (item) => {
+  if (item === null || item === undefined) return "";
+  if (typeof item === "string") return item;
+  if (typeof item === "number" || typeof item === "boolean") return String(item);
+  if (Array.isArray(item)) return item.map(toSentence).filter(Boolean).join("; ");
+  return Object.values(item).map(toSentence).filter(Boolean).join(" — ");
+};
 
+// Step 1 asks the AI only for written suggestions (the score is calculated by code)
+export const SuggestionsSchema = z.object({
+  suggestions: z.preprocess(
+    (value) =>
+      Array.isArray(value) ? value.map(toSentence).filter(Boolean) : value,
+    z.array(z.string()).min(1)
+  ),
+});
 
 // Sometimes the AI sends a job as an object, e.g.
 //   { role: "Developer", company: "ABC", dates: "2022-2024", bullets: ["...", "..."] }
@@ -30,13 +42,11 @@ const toLines = (item) => {
   return [header, ...nested].filter(Boolean);
 };
 
-
 // z.preprocess runs our converter FIRST, then checks the result is a list of strings.
 const ContentSchema = z.preprocess(
   (value) => (Array.isArray(value) ? value.flatMap(toLines) : value),
   z.array(z.string())
 );
-
 
 // The shape we EXPECT back from the AI for step 2 (improved resume)
 // .catch("") means: if name/email/phone is missing or null, use "" instead of failing

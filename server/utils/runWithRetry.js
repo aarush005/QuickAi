@@ -19,8 +19,6 @@ export const runWithRetry = async (getRawText, schema, attempts = 2) => {
             return schema.parse(parsed);                     // does it have the right shape?
         } catch (err) {
             console.error(`AI attempt ${attempt}/${attempts} failed:`, err.message);
-            console.error("RAW AI ANSWER (temporary):", String(raw).slice(0, 1500));
-
         }
     }
     throw new AppError(
