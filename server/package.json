@@ -13,8 +13,6 @@
   "license": "ISC",
   "dependencies": {
     "@clerk/express": "^1.7.41",
-    "@google-cloud/vertexai": "^1.10.0",
-    "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
@@ -23,7 +21,6 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "form-data": "^4.0.4",
     "multer": "^2.0.2",
     "openai": "^6.33.0",
     "pdf-parse": "^1.1.1",
