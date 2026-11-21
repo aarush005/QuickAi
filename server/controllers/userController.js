@@ -10,7 +10,7 @@ export const getUserCreations = async (req, res) =>{
         orderBy: {createdAt: "desc"},
       })
 
-      console.log("PRISMA RESULT:", creations)
+
       
     //   sql  `SELECT * FROM creations WHERE user_id = ${userId} ORDER BY created_at DESC`;
 

@@ -3,40 +3,32 @@ import { AI } from "../config/ai.js";
 import { extractPdfText } from "../utils/pdfExtractor.js";
 import { runWithRetry } from "../utils/runWithRetry.js";
 import { AppError } from "../utils/AppError.js";
-import { AnalysisSchema, ImprovedResumeSchema } from "../schemas/resumeSchemas.js";
+import { SuggestionsSchema, ImprovedResumeSchema } from "../schemas/resumeSchemas.js";
+import { scoreResume } from "../utils/resumeScorer.js";
 import { saveCreation } from "../repositories/creationRepository.js";
-
-
-
 
 const MODEL = "openai/gpt-4o-mini";
 
+// ---------- Prompts ----------
 
-/// --------------------------------------------- PROMPTS --------------------------------------------///
-
-const buildAnalysisPrompt = (resumeText) => `
-You are an ATS resume analyzer.
+const buildSuggestionsPrompt = (resumeText) => `
+You are an experienced resume coach.
 
 TASK:
--Give ATS score (0-100)
+- Read the resume below
+- Give 3 to 5 specific, actionable suggestions to improve it
+- Focus on wording, weak bullet points, clarity and missing details
+- Mention the actual job titles or projects from the resume
+- Do NOT give a score
+- Each suggestion MUST be ONE plain text sentence (a string)
+- NEVER use objects, titles, or nested fields inside "suggestions"
 
-ATS RULES:
-- Start from 100
-- Deduct points:
-  - missing sections (-10 each)
-  - weak bullet points (-5 each)
-  - missing keywords (-15)
-  - no measurable achievements (-10)
-
-- Provide improvement points
-- FIRST point must include missing sections
-
-Return JSON:
+Return JSON, exactly in this format:
 {
-  "analysis": {
-    "score": 0,
-    "points": []
-  }
+  "suggestions": [
+    "First suggestion as one plain sentence.",
+    "Second suggestion as one plain sentence."
+  ]
 }
 
 Resume:
@@ -59,6 +51,9 @@ RULES:
 - Improve bullet points with measurable results
 - Add missing sections if mentioned
 - Do NOT invent fake experience
+- Every item in each section's "content" array MUST be a plain text string
+- NEVER use objects or nested arrays inside "content"
+- For jobs and projects: write ONE string like "Role — Company (dates)", then write each bullet point as its own separate string
 
 Return JSON:
 {
@@ -75,25 +70,22 @@ Return JSON:
 
 Original Resume:
 ${resumeText}
-
 `;
 
-// ----------------------- One call to the AI------------------//
+// ---------- One call to the AI ----------
 
 const askAI = async (prompt, maxTokens) => {
-    const result = await AI.chat.completions.create({
-        model: MODEL,
-        message: [{role: "user", content: prompt}],
-        temperature: 0.3,
-        max_token: maxTokens,
-        response_format: {type: "json_object"},  // ask the AI for valid JSON
-    });
-    return result.choices[0].message.content;
+  const result = await AI.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.3,
+    max_tokens: maxTokens,
+    response_format: { type: "json_object" }, // ask the AI for valid JSON
+  });
+  return result.choices[0].message.content;
 };
 
-
-
-//--------------------The whole feature ----------------------//
+// ---------- The whole feature ----------
 
 export const review = async ({ file, userId, plan }) => {
   try {
@@ -103,28 +95,32 @@ export const review = async ({ file, userId, plan }) => {
 
     const resumeText = await extractPdfText(file.path);
 
-    const {analysis } = await runWithRetry(
-        () => askAI(buildAnalysisPrompt(resumeText),1500),
-        AnalysisSchema
+    // The SCORE and its deductions come from plain code (same resume = same score)
+    const { score, points: checkPoints } = scoreResume(resumeText);
+
+    // The AI only adds written suggestions
+    const { suggestions } = await runWithRetry(
+      () => askAI(buildSuggestionsPrompt(resumeText), 800),
+      SuggestionsSchema
     );
 
+    const analysis = { score, points: [...checkPoints, ...suggestions.slice(0, 4)] };
+
     const resume = await runWithRetry(
-        () => askAI(buildAnalysisPrompt(resumeText,analysis.points), 3000),
-        ImprovedResumeSchema
-    )
+      () => askAI(buildImprovePrompt(resumeText, analysis.points), 3000),
+      ImprovedResumeSchema
+    );
 
     await saveCreation({
-        userId,
-        prompt: "Resume Review + Improvement",
-        content: JSON.stringify({analysis,resume}), //stays a String (ADR 001)
-        type: "resume",
-
+      userId,
+      prompt: "Resume Review + Improvement",
+      content: JSON.stringify({ analysis, resume }), // stays a String (ADR 0001)
+      type: "resume",
     });
 
-    return { analysis, resume};
-}finally{
-
-    // Runs on success AND on every error above the uploaded temp file is always deleted.
+    return { analysis, resume };
+  } finally {
+    // Runs on success AND on every error above: the uploaded temp file is always deleted.
     await fs.unlink(file.path).catch(() => {});
-}
-}
+  }
+};

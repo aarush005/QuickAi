@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import pdf from "./pdfParse.cjs"; //the small bridge file you already have
-import { AppError } from "./AppError";
+import { AppError } from "./AppError.js";
 
 const MIN_CHARS = 50;      // less than this = probably a scanned/image-only PDF
 const MAX_CHARS = 15000;   // cap what we send to the AI (control cost)
